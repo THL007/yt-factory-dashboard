@@ -1,9 +1,13 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { Archive, CircleCheck, CircleDashed, CirclePause, MousePointerClick, Plus, RefreshCw, Save, Trash2, Tv, UserCheck, Users, type LucideIcon } from "lucide-react";
 import { api, Channel, CHANNEL_STATUS, ChannelStatus, Person } from "../lib/api";
 
 type Draft = { name: string; niche: string; language: string; cadence: string; voice_tone: string; status: ChannelStatus };
 const blank: Draft = { name: "", niche: "", language: "EN", cadence: "", voice_tone: "", status: "draft" };
 const toDraft = (c: Channel): Draft => ({ name: c.name, niche: c.niche || "", language: c.language || "", cadence: c.cadence || "", voice_tone: c.voice_tone || "", status: c.status });
+
+const STATUS_ICON: Record<ChannelStatus, LucideIcon> = { draft: CircleDashed, active: CircleCheck, paused: CirclePause, archived: Archive };
+const I = { size: 16, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export function Channels() {
   const [list, setList] = useState<Channel[] | null>(null);
@@ -23,6 +27,7 @@ export function Channels() {
 
   const shown = (list || []).filter((c) => showArchived || c.status !== "archived");
   const archived = (list || []).filter((c) => c.status === "archived").length;
+  const current = (list || []).find((c) => c.id === open) || null;
 
   return (
     <section className="page">
@@ -31,59 +36,62 @@ export function Channels() {
           <h1 className="page__title">Channels</h1>
           <p className="page__lede">Each channel has a niche, a language and a cadence. Members are the people who work its videos.</p>
         </div>
-        {!adding && <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>Add a channel</button>}
+        {!adding && <button type="button" className="btn btn--primary" onClick={() => { setAdding(true); setOpen(null); }}><Plus {...I} />Add a channel</button>}
       </div>
 
-      {adding && <ChannelForm title="New channel" initial={blank} submitLabel="Add channel" onCancel={() => setAdding(false)}
-        onSubmit={async (d) => { const r = await api.createChannel(d); setAdding(false); await load(); setOpen(r.id); }} />}
-
-      {error && <div className="notice notice--error" role="alert"><p>Couldn’t load channels: {error}</p><button type="button" className="btn" onClick={load}>Try again</button></div>}
-      {!error && list === null && <div className="card">{[0, 1, 2].map((i) => <span key={i} className="skel skel--line" style={{ width: `${70 - i * 12}%`, margin: "0.9rem 0" }} />)}</div>}
+      {error && <div className="notice notice--error" role="alert"><p>Couldn’t load channels: {error}</p><button type="button" className="btn" onClick={load}><RefreshCw {...I} />Try again</button></div>}
+      {!error && list === null && <div className="panels"><div className="panel">{[0, 1, 2].map((i) => <span key={i} className="skel skel--line" style={{ width: `${70 - i * 12}%`, margin: "0.9rem 0" }} />)}</div></div>}
       {list && list.length === 0 && !adding && (
-        <div className="card empty"><p className="empty__title">No channels yet.</p><p>Add the first one: a name and a niche are enough to start research.</p><button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>Add a channel</button></div>
+        <div className="panels"><div className="panel empty"><p className="empty__title">No channels yet.</p><p>Add the first one: a name and a niche are enough to start research.</p><button type="button" className="btn btn--primary" onClick={() => setAdding(true)}><Plus {...I} />Add a channel</button></div></div>
       )}
 
-      {list && list.length > 0 && (
-        <section className="card card--flush">
-          <table className="table table--rows">
-            <thead><tr><th scope="col">Channel</th><th scope="col" className="hide-s">Language</th><th scope="col" className="hide-s">Cadence</th><th scope="col">Status</th><th scope="col" className="num">Videos</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
-            <tbody>
-              {shown.map((c) => (
-                <ChannelRow key={c.id} c={c} people={people} open={open === c.id} onToggle={() => setOpen(open === c.id ? null : c.id)} onChanged={load} />
-              ))}
-            </tbody>
-          </table>
-          {archived > 0 && <div className="card__foot"><button type="button" className="link-btn" onClick={() => setShowArchived(!showArchived)}>{showArchived ? "Hide" : "Show"} {archived} archived</button></div>}
-        </section>
+      {list && (list.length > 0 || adding) && (
+        <div className="panels master">
+          <nav className="master__list" aria-label="Channels">
+            <ul>
+              {shown.map((c) => {
+                const SIcon = STATUS_ICON[c.status];
+                return (
+                  <li key={c.id}>
+                    <button type="button" className="master__item" aria-current={open === c.id ? "true" : undefined} aria-expanded={open === c.id}
+                      onClick={() => { setAdding(false); setOpen(open === c.id ? null : c.id); }} aria-label={`${open === c.id ? "Close" : "Edit"} ${c.name}`}>
+                      <span className="master__name"><Tv {...I} />{c.name}</span>
+                      <span className="master__meta">
+                        <span className={`chip chip--${c.status}`}><SIcon size={12} strokeWidth={2} aria-hidden="true" />{CHANNEL_STATUS.find((x) => x.id === c.status)?.label}</span>
+                        <span className="measured">{c.language}</span>
+                        <span className="measured">{c.videos} video{c.videos === 1 ? "" : "s"}</span>
+                      </span>
+                      <span className="row-sub">{c.niche || "No niche yet"}{c.cadence ? `. ${c.cadence}` : ""}</span>
+                      {c.members.length > 0 && <span className="master__members"><Users size={12} strokeWidth={1.75} aria-hidden="true" />{c.members.map((m) => m.display_name).join(", ")}</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {archived > 0 && <button type="button" className="link-btn master__more" onClick={() => setShowArchived(!showArchived)}>{showArchived ? "Hide" : "Show"} {archived} archived</button>}
+          </nav>
+          <div className="master__detail">
+            {adding && <ChannelForm title="New channel" initial={blank} submitLabel="Add channel" onCancel={() => setAdding(false)}
+              onSubmit={async (d) => { const r = await api.createChannel(d); setAdding(false); await load(); setOpen(r.id); }} />}
+            {!adding && current && (
+              <>
+                <ChannelForm key={current.id} title={`Edit ${current.name}`} initial={toDraft(current)} submitLabel="Save changes" onCancel={() => setOpen(null)}
+                  onSubmit={async (d) => { await api.updateChannel(current.id, d); await load(); }} />
+                <Members key={`m-${current.id}`} c={current} people={people} onSaved={load} />
+                <Danger c={current} onDone={async () => { await load(); }} />
+              </>
+            )}
+            {!adding && !current && (
+              <div className="detail-empty"><MousePointerClick size={20} strokeWidth={1.5} aria-hidden="true" /><p>Pick a channel to edit its details, status and members.</p></div>
+            )}
+          </div>
+        </div>
       )}
     </section>
   );
 }
 
-function ChannelRow({ c, people, open, onToggle, onChanged }: { c: Channel; people: Person[]; open: boolean; onToggle: () => void; onChanged: () => Promise<void> }) {
-  return (
-    <>
-      <tr className={open ? "is-open" : undefined}>
-        <td><span className="row-title">{c.name}</span><span className="row-sub">{c.niche || "No niche yet"}{c.members.length ? `. ${c.members.map((m) => m.display_name).join(", ")}` : ""}</span></td>
-        <td className="hide-s">{c.language}</td>
-        <td className="hide-s">{c.cadence || <span className="muted">not set</span>}</td>
-        <td><span className={`status status--${c.status}`}>{CHANNEL_STATUS.find((s) => s.id === c.status)?.label}</span></td>
-        <td className="num">{c.videos}</td>
-        <td className="cell-action"><button type="button" className="link-btn" aria-expanded={open} onClick={onToggle} aria-label={`${open ? "Close" : "Edit"} ${c.name}`}>{open ? "Close" : "Edit"}</button></td>
-      </tr>
-      {open && (
-        <tr className="row-panel"><td colSpan={6}>
-          <ChannelForm title={`Edit ${c.name}`} initial={toDraft(c)} submitLabel="Save changes" onCancel={onToggle}
-            onSubmit={async (d) => { await api.updateChannel(c.id, d); await onChanged(); }} flat />
-          <Members c={c} people={people} onSaved={onChanged} />
-          <Danger c={c} onDone={onChanged} />
-        </td></tr>
-      )}
-    </>
-  );
-}
-
-function ChannelForm({ title, initial, submitLabel, onSubmit, onCancel, flat }: { title: string; initial: Draft; submitLabel: string; onSubmit: (d: Draft) => Promise<void>; onCancel: () => void; flat?: boolean }) {
+function ChannelForm({ title, initial, submitLabel, onSubmit, onCancel }: { title: string; initial: Draft; submitLabel: string; onSubmit: (d: Draft) => Promise<void>; onCancel: () => void }) {
   const [d, setD] = useState<Draft>(initial);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -95,8 +103,8 @@ function ChannelForm({ title, initial, submitLabel, onSubmit, onCancel, flat }: 
     try { await onSubmit({ ...d, name: d.name.trim() }); setMsg({ ok: true, text: "Saved." }); } catch (err: any) { setMsg({ ok: false, text: err.message }); } finally { setBusy(false); }
   }
   return (
-    <form className={flat ? "form" : "card form"} onSubmit={submit} noValidate>
-      <h2 className="card__head">{title}</h2>
+    <form className="form" onSubmit={submit} noValidate>
+      <h2 className="panel__head">{title}</h2>
       <div className="grid-2">
         <label className="field"><span className="field__label">Name</span><input className="input" value={d.name} onChange={set("name")} placeholder="Deep Sea Facts" /></label>
         <label className="field"><span className="field__label">Niche</span><input className="input" value={d.niche} onChange={set("niche")} placeholder="Ocean animals, science explainers" /></label>
@@ -108,13 +116,13 @@ function ChannelForm({ title, initial, submitLabel, onSubmit, onCancel, flat }: 
         <legend className="field__label">Status</legend>
         <div className="groove" role="radiogroup">
           {CHANNEL_STATUS.map((s) => (
-            <label key={s.id} className="groove__opt"><input type="radio" name={`status-${title}`} checked={d.status === s.id} onChange={() => setD({ ...d, status: s.id })} /><span>{s.label}</span></label>
+            <label key={s.id} className="groove__opt"><input type="radio" name={`status-${title}`} checked={d.status === s.id} onChange={() => setD({ ...d, status: s.id })} /><span>{(() => { const SI = STATUS_ICON[s.id]; return <SI size={14} strokeWidth={1.75} aria-hidden="true" />; })()}{s.label}</span></label>
           ))}
         </div>
       </fieldset>
       {msg && <p className={msg.ok ? "field__ok" : "field__error"} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
       <div className="form__actions">
-        <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}>{busy ? "Saving…" : submitLabel}</button>
+        <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}><Save {...I} />{busy ? "Saving…" : submitLabel}</button>
         <button className="btn" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
       </div>
     </form>
@@ -132,7 +140,7 @@ function Members({ c, people, onSaved }: { c: Channel; people: Person[]; onSaved
   }
   return (
     <div className="subsection">
-      <h3 className="subsection__head">Members</h3>
+      <h3 className="subsection__head"><Users {...I} />Members</h3>
       {people.length === 0 ? <p className="muted">No people yet. Add them under People and tokens.</p> : (
         <div className="checks">
           {people.map((p) => (
@@ -144,7 +152,7 @@ function Members({ c, people, onSaved }: { c: Channel; people: Person[]; onSaved
         </div>
       )}
       {msg && <p className={msg.ok ? "field__ok" : "field__error"} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
-      <button type="button" className="btn" disabled={busy || !changed} aria-busy={busy} onClick={save}>{busy ? "Saving…" : "Save members"}</button>
+      <button type="button" className="btn" disabled={busy || !changed} aria-busy={busy} onClick={save}><UserCheck {...I} />{busy ? "Saving…" : "Save members"}</button>
     </div>
   );
 }
@@ -159,10 +167,10 @@ function Danger({ c, onDone }: { c: Channel; onDone: () => Promise<void> }) {
   }
   return (
     <div className="subsection">
-      <h3 className="subsection__head">Remove</h3>
+      <h3 className="subsection__head"><Trash2 {...I} />Remove</h3>
       {c.videos > 0
         ? <p className="muted">This channel has {c.videos} video ticket{c.videos === 1 ? "" : "s"}, so it can only be archived. Set its status to Archived above.</p>
-        : <><p className="muted">No videos yet, so the channel can be deleted.</p><button type="button" className="btn btn--danger" disabled={busy} aria-busy={busy} onClick={del}>{busy ? "Deleting…" : "Delete channel"}</button></>}
+        : <><p className="muted">No videos yet, so the channel can be deleted.</p><button type="button" className="btn btn--danger" disabled={busy} aria-busy={busy} onClick={del}><Trash2 {...I} />{busy ? "Deleting…" : "Delete channel"}</button></>}
       {error && <p className="field__error" role="alert">{error}</p>}
     </div>
   );

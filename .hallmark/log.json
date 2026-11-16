@@ -1,6 +1,30 @@
 [
  {
   "scope": "app",
+  "mode": "redesign",
+  "depth": "full",
+  "shape": "app screen",
+  "theme": "console",
+  "axes": "dark/grotesk-sans/chromatic-amber",
+  "hero": "none",
+  "nav": "top bar with Lucide icons, research desk link, name, role, sign-out icon",
+  "footer": "none",
+  "imagery": "Lucide icons inline (one library)",
+  "photos": [],
+  "entry": "none",
+  "fingerprint": "owners-admins-run-faceless-57a7",
+  "sections": [
+   "overview: lead reading over the stage track, bento readings, by-channel table, activity trail, channel numbers (not connected)",
+   "channels: master-detail",
+   "people and tokens: mint and add as one surface, issued reading, people, tokens"
+  ],
+  "signature": "the activity trail on a spine with a Lucide node per entry, person in amber, time in cool",
+  "waived": [],
+  "prompt": "Redesign the factory dashboard with Google fonts and icons",
+  "date": "2026-11-16"
+ },
+ {
+  "scope": "app",
   "shape": "app screen",
   "theme": "coral",
   "axes": "light/grotesk-sans/warm",

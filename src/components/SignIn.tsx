@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { Factory, LogIn } from "lucide-react";
 import { api, DEFAULT_API, isAdmin, saveSettings } from "../lib/api";
 
 export function SignIn({ onDone }: { onDone: () => void }) {
@@ -22,7 +23,8 @@ export function SignIn({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="signin">
-      <form className="card signin__card" onSubmit={submit} noValidate>
+      <form className="panel signin__card" onSubmit={submit} noValidate>
+        <Factory size={28} strokeWidth={1.5} aria-hidden="true" className="signin__mark" />
         <h1 className="signin__title">Factory dashboard</h1>
         <p className="signin__lede">Channels, people, access tokens and pipeline numbers. Sign in with an owner or admin token.</p>
         <label className="field">
@@ -35,7 +37,7 @@ export function SignIn({ onDone }: { onDone: () => void }) {
           <label className="field"><span className="field__label">Factory API</span><input className="input input--mono" value={apiUrl} onChange={(e) => setApiUrl(e.target.value)} /></label>
         </details>
         {error && <p id="signin-err" className="field__error" role="alert">{error}</p>}
-        <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}>{busy ? "Checking…" : "Sign in"}</button>
+        <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}><LogIn size={16} strokeWidth={1.75} aria-hidden="true" />{busy ? "Checking…" : "Sign in"}</button>
         <p className="fine">The token stays in this browser. Signing out removes it.</p>
       </form>
     </main>

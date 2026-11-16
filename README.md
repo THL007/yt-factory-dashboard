@@ -2,7 +2,7 @@
 
 Owner/admin PWA for the faceless YouTube factory: channels, people, role access tokens and pipeline numbers.
 
-- **App:** https://thl007.github.io/yt-factory-dashboard/ (Expo web PWA, Hallmark Coral theme)
+- **App:** https://thl007.github.io/yt-factory-dashboard/ (Expo web PWA, Hallmark Console theme, Google Fonts Host Grotesk + Atkinson Hyperlegible Mono, Lucide icons)
 - **API:** https://yt-factory-api.thl007.workers.dev, code in [THL007/yt-factory-research](https://github.com/THL007/yt-factory-research) (`api/`)
 - **Data:** Neon project `yt-factory-cm-1`
 

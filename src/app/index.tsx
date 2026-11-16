@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ExternalLink, Factory, KeyRound, LayoutDashboard, LogOut, Tv } from "lucide-react";
 import { api, getSettings, isAdmin, Me, RESEARCH_URL, signOut } from "../lib/api";
 import { SignIn } from "../components/SignIn";
 import { Overview } from "../components/Overview";
@@ -6,10 +7,10 @@ import { Channels } from "../components/Channels";
 import { People } from "../components/People";
 
 type View = "overview" | "channels" | "people";
-const TABS: { id: View; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "channels", label: "Channels" },
-  { id: "people", label: "People and tokens" },
+const TABS: { id: View; label: string; Icon: typeof Tv }[] = [
+  { id: "overview", label: "Overview", Icon: LayoutDashboard },
+  { id: "channels", label: "Channels", Icon: Tv },
+  { id: "people", label: "People and tokens", Icon: KeyRound },
 ];
 
 function readView(): View {
@@ -62,18 +63,21 @@ export default function Home() {
       <header className="bar">
         <div className="bar__in">
           <a className="wordmark" href="./" onClick={(e) => { e.preventDefault(); go("overview"); }}>
-            <span className="wordmark__name">Factory dashboard</span>
-            <span className="wordmark__sub">YT factory, all channels</span>
+            <Factory className="wordmark__mark" size={22} strokeWidth={1.75} aria-hidden="true" />
+            <span className="wordmark__text">
+              <span className="wordmark__name">Factory dashboard</span>
+              <span className="wordmark__sub">YT factory, all channels</span>
+            </span>
           </a>
           <nav className="tabs" aria-label="Sections">
             {TABS.map((t) => (
-              <button key={t.id} type="button" className="tab" aria-current={view === t.id ? "page" : undefined} onClick={() => go(t.id)}>{t.label}</button>
+              <button key={t.id} type="button" className="tab" aria-current={view === t.id ? "page" : undefined} onClick={() => go(t.id)}><t.Icon size={16} strokeWidth={1.75} aria-hidden="true" /><span>{t.label}</span></button>
             ))}
           </nav>
           <div className="who">
-            <a className="who__link" href={RESEARCH_URL} target="_blank" rel="noopener noreferrer">Research desk</a>
+            <a className="who__link" href={RESEARCH_URL} target="_blank" rel="noopener noreferrer">Research desk<ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" /></a>
             {me ? <span className="who__name">{me.user.display_name}<span className="who__role">{me.role}</span></span> : <span className="skel skel--line" style={{ width: 96 }} />}
-            <button type="button" className="link-btn" onClick={leave}>Sign out</button>
+            <button type="button" className="icon-btn" onClick={leave} aria-label="Sign out" title="Sign out"><LogOut size={16} strokeWidth={1.75} aria-hidden="true" /></button>
           </div>
         </div>
       </header>
@@ -83,11 +87,11 @@ export default function Home() {
           <div className="notice notice--error" role="alert"><p>{bootError}</p><button type="button" className="btn" onClick={load}>Try again</button></div>
         )}
         {boot === "forbidden" && me && (
-          <div className="card empty">
+          <div className="panels"><div className="panel empty">
             <p className="empty__title">This dashboard is for owners and admins.</p>
             <p>Your token has the {me.role} role. Use the <a href={RESEARCH_URL}>Research desk</a>, or ask the owner for an admin token.</p>
             <button type="button" className="btn" onClick={leave}>Use another token</button>
-          </div>
+          </div></div>
         )}
         {boot === "loading" && <Overview.Skeleton />}
         {boot === "ready" && me && (
