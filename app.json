@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Factory dashboard",
+    "slug": "yt-factory-dashboard",
+    "version": "1.0.0",
+    "scheme": "ytfdash",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Factory dashboard",
+      "shortName": "Factory",
+      "themeColor": "#f6f3f1",
+      "backgroundColor": "#f6f3f1"
+    },
+    "experiments": {
+      "baseUrl": "/yt-factory-dashboard",
+      "typedRoutes": false
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
